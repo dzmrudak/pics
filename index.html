@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Random Pictures Grid</title>
+    <style>
+        #picture-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            max-width: calc(25vw - 20px); /* Subtract some padding to fit within screen */
+        }
+
+        /* Style the pictures */
+        .picture {
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <h1>Random Pictures Grid</h1>
+
+    <form id="search-form" method="POST" action="/picture" enctype="multipart/form-data">
+        <label for="search-input">Search Picture:</label>
+        <input type="text" name="pictureName">
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="picture-grid">
+        <!-- The pictures will be dynamically added here -->
+    </div>
+
+    <div id="picture-container"></div>
+
+    <script>
+        // Get the picture grid element
+        const pictureGrid = document.querySelector('#picture-grid');
+
+        // Add 9 pictures to the grid
+        for (let i = 0; i < 9; i++) {
+            fetch('/random-picture')
+                .then(response => response.blob())
+                .then(blob => {
+                    const picture = document.createElement('img');
+                    picture.classList.add('picture');
+                    picture.src = URL.createObjectURL(blob);
+
+                    // Add the picture to the grid
+                    pictureGrid.appendChild(picture);
+                })
+                .catch(error => console.error(error));
+        }
+
+        const form = document.querySelector('#search-form');
+        const pictureContainer = document.querySelector('#picture-container');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const response = await fetch('/picture', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const picture = document.createElement('img');
+                picture.classList.add('picture');
+                picture.src = URL.createObjectURL(await response.blob());
+                pictureGrid.style.display = 'none';
+                pictureContainer.innerHTML = '';
+                pictureContainer.appendChild(picture);
+            } else {
+                pictureContainer.innerHTML = `Error: ${response.statusText}`;
+            }
+        });
+    </script>
+</body>
+</html>

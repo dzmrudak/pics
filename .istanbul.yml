@@ -1,0 +1,11 @@
+# .istanbul.yml
+
+instrumentation:
+  root: ./src
+  include: ['**/*.js']
+  exclude: ['**/*.test.js']
+
+reporting:
+  reports:
+    - lcov
+    - text-summary

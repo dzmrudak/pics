@@ -1,0 +1,77 @@
+const { chromium } = require('playwright');
+const MainPage = require('../models/Main.page');
+
+describe('Applitools demo page', () => {
+    jest.setTimeout(3000);
+    let browser = null;
+    let context = null;
+    let page = null;
+    let mainPage = null;
+    let webVitalsError = false;
+
+    beforeAll(async () => {
+        // we launch browser and navigate to the loginpage
+        browser = await chromium.launch({ headless: false });
+        context = await browser.newContext();
+        page = await context.newPage();
+        mainPage = new MainPage(page);
+        await mainPage.navigate();
+
+
+    });
+
+    beforeEach(async () => {
+        page.on('pageerror', (error) => {
+            console.error('Web Vitals error:', error);
+            webVitalsError = true;
+        });
+
+        // Wait for the page to finish loading
+        await page.waitForLoadState('networkidle');
+    });
+
+    afterAll(async () => {
+        // closing browser
+        await context.close();
+        await browser.close();
+    });
+
+    it.only('Should be able to search a picture', async () => {
+        if (webVitalsError) {
+            throw new Error('Web Vitals error occurred');
+        }
+        const picName = '1.png';
+        const attrText = 'alt';
+        await mainPage.enterPictureName(picName);
+        await mainPage.clickSubmitButton();
+        expect(await mainPage.getSearchedPictureAttrText(attrText)).toBe(picName);
+    });
+
+    it('Should be able to get the header name', async () => {
+        expect(await mainPage.getPageHeader()).toBe('Random Pictures Grid');
+    });
+
+    it('Should contain 9 pictures in the picture grid', async () => {
+        expect(await mainPage.getArrayOfPicturesFromGrid()).toBe(9);
+    });
+
+    it('Should show an error message if the picture is not found', async () => {
+        const picName = 'cat';
+        await mainPage.enterPictureName(picName);
+        await mainPage.clickSubmitButton();
+        expect(await mainPage.getErrorMessageText()).toBe('Error: Not Found');
+    });
+
+    it('Should block the submit button if there are no symbols in the search field', async () => {
+        const emptyValue = '';
+        await mainPage.enterPictureName(emptyValue);
+        expect(await mainPage.getSbmtButtonDisabled()).toBe(true);
+    });
+
+    it('Should block the submit button if there is a single space in the search field', async () => {
+        const emptyValue = ' ';
+        await mainPage.enterPictureName(emptyValue);
+        expect(await mainPage.getSbmtButtonDisabled()).toBe(true);
+    });
+
+});

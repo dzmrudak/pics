@@ -1,0 +1,13 @@
+#picture-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    max-width: calc(25vw);
+}
+
+/* Style the pictures */
+.picture {
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
